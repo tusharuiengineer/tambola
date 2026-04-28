@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tambola — Housie</title>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;600;800&family=Poppins:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --gold: #f5c842;
+    --gold-dark: #c99a1a;
+    --crimson: #c0392b;
+    --bg: #1a0a00;
+    --card-bg: #2e1600;
+    --text: #fff9ec;
+    --text-muted: #c8a87a;
+    --border: rgba(245,200,66,0.2);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body { height: 100%; overflow: hidden; }
+
+  body {
+    font-family: 'Poppins', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    background-image:
+      radial-gradient(circle at 10% 20%, rgba(245,200,66,0.05) 0%, transparent 40%),
+      radial-gradient(circle at 90% 80%, rgba(192,57,43,0.07) 0%, transparent 40%);
+  }
+
+  .main-layout {
+    display: flex;
+    height: 100vh;
+    width: 100vw;
+  }
+
+  /* ===== LEFT PANEL ===== */
+  .left-panel {
+    width: 195px;
+    min-width: 175px;
+    padding: 12px 12px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    border-right: 1px solid var(--border);
+    background: rgba(0,0,0,0.25);
+    overflow: hidden;
+  }
+
+  .current-label {
+    font-size: 0.58rem;
+    color: var(--gold);
+    letter-spacing: 3px;
+    text-transform: uppercase;
+  }
+
+  .number-display {
+    position: relative;
+    width: 125px;
+    height: 125px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .number-ring {
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    border: 2.5px solid var(--gold);
+    animation: ring-pulse 2s ease-in-out infinite;
+  }
+
+  .number-ring-2 {
+    position: absolute;
+    inset: 7px;
+    border-radius: 50%;
+    border: 1px solid rgba(245,200,66,0.25);
+  }
+
+  @keyframes ring-pulse {
+    0%, 100% { opacity: 0.3; transform: scale(1); }
+    50% { opacity: 0.65; transform: scale(1.03); }
+  }
+
+  .big-number {
+    font-family: 'Baloo 2', cursive;
+    font-size: 4.6rem;
+    font-weight: 800;
+    color: var(--gold);
+    line-height: 1;
+    text-shadow: 0 0 28px rgba(245,200,66,0.5);
+    position: relative;
+    z-index: 1;
+  }
+
+  .big-number.rolling { animation: roll-in 0.08s steps(1) infinite; }
+
+  @keyframes roll-in {
+    0% { opacity: 1; }
+    50% { opacity: 0.3; }
+  }
+
+  .bingo-phrase {
+    font-size: 0.63rem;
+    color: var(--gold);
+    text-align: center;
+    line-height: 1.35;
+    min-height: 2.5em;
+    padding: 0 4px;
+    font-style: italic;
+    opacity: 0.85;
+  }
+
+  .divider {
+    width: 70%;
+    height: 1px;
+    background: var(--border);
+    flex-shrink: 0;
+  }
+
+  .history-label {
+    font-size: 0.58rem;
+    color: var(--text-muted);
+    letter-spacing: 3px;
+    text-transform: uppercase;
+  }
+
+  .history-bubbles {
+    display: flex;
+    gap: 5px;
+    align-items: center;
+  }
+
+  /* 3 bubbles: oldest=smallest/dimmest, newest=largest/brightest */
+  .hb {
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Baloo 2', cursive;
+    font-weight: 800;
+    border: 1.5px solid rgba(200,168,122,0.3);
+    color: var(--text-muted);
+    background: rgba(200,168,122,0.08);
+    transition: all 0.4s;
+  }
+
+  #hist1 { width: 33px; height: 33px; font-size: 0.75rem; opacity: 0.45; }
+  #hist2 { width: 38px; height: 38px; font-size: 0.85rem; opacity: 0.68; }
+  #hist3 { width: 44px; height: 44px; font-size: 0.95rem; opacity: 1; border-color: rgba(200,168,122,0.55); }
+
+  .count-info {
+    font-size: 0.6rem;
+    color: var(--text-muted);
+    text-align: center;
+    letter-spacing: 1px;
+  }
+  .count-info span { color: var(--gold); font-weight: 700; font-size: 0.76rem; }
+
+  .run-btn {
+    width: 100%;
+    padding: 10px 10px;
+    background: linear-gradient(135deg, var(--gold) 0%, var(--gold-dark) 100%);
+    color: var(--bg);
+    border: none;
+    border-radius: 10px;
+    font-family: 'Baloo 2', cursive;
+    font-size: 1.15rem;
+    font-weight: 800;
+    letter-spacing: 2px;
+    cursor: pointer;
+    transition: all 0.2s;
+    box-shadow: 0 4px 16px rgba(245,200,66,0.28);
+    text-transform: uppercase;
+    flex-shrink: 0;
+  }
+
+  .run-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 22px rgba(245,200,66,0.4); }
+  .run-btn:active { transform: scale(0.97); }
+  .run-btn:disabled { opacity: 0.55; cursor: not-allowed; transform: none; }
+
+  .reset-btn {
+    background: transparent;
+    border: 1px solid rgba(192,57,43,0.4);
+    color: var(--crimson);
+    border-radius: 7px;
+    padding: 6px 10px;
+    font-size: 0.6rem;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    cursor: pointer;
+    width: 100%;
+    transition: all 0.2s;
+    flex-shrink: 0;
+  }
+  .reset-btn:hover { background: rgba(192,57,43,0.15); border-color: var(--crimson); }
+
+  /* ===== RIGHT PANEL — GRID ===== */
+  .right-panel {
+    flex: 1;
+    padding: 10px 12px;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .number-grid {
+    display: grid;
+    grid-template-columns: repeat(10, 1fr);
+    grid-template-rows: repeat(9, 1fr);
+    grid-auto-flow: column;
+    gap: 4px;
+    flex: 1;
+  }
+
+  .num-cell {
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Baloo 2', cursive;
+    font-size: clamp(0.8rem, 1.8vw, 1.3rem);
+    font-weight: 700;
+    cursor: default;
+    user-select: none;
+    transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+    min-width: 0;
+    min-height: 0;
+    /* Even columns (0,2,4,6,8): subtle dark */
+    border: 1.5px solid rgba(255,255,255,0.08);
+    background: rgba(255,255,255,0.05);
+    color: rgba(255,255,255,0.4);
+  }
+
+  /* Odd columns — warm amber tint, clearly distinct */
+  .num-cell.alt {
+    background: rgba(180,120,20,0.22);
+    border-color: rgba(245,200,66,0.35);
+    color: rgba(255,215,100,0.82);
+  }
+
+  .num-cell.selected {
+    background: var(--gold) !important;
+    color: #1a0a00 !important;
+    border-color: var(--gold-dark) !important;
+    box-shadow: 0 0 14px rgba(245,200,66,0.65);
+    transform: scale(1.1);
+    z-index: 2;
+    font-weight: 800;
+  }
+
+  .num-cell.just-called {
+    animation: pop-cell 0.55s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+  }
+
+  @keyframes pop-cell {
+    0%   { transform: scale(1); box-shadow: 0 0 0 rgba(245,200,66,0); }
+    40%  { transform: scale(1.35); box-shadow: 0 0 30px rgba(245,200,66,0.9); }
+    100% { transform: scale(1.1); box-shadow: 0 0 14px rgba(245,200,66,0.65); }
+  }
+
+  /* ===== POPUP ===== */
+  .popup-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.72);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s;
+    backdrop-filter: blur(3px);
+  }
+  .popup-overlay.active { opacity: 1; pointer-events: all; }
+
+  .popup-card {
+    background: var(--card-bg);
+    border: 2px solid var(--gold);
+    border-radius: 22px;
+    padding: 30px 42px;
+    text-align: center;
+    box-shadow: 0 0 55px rgba(245,200,66,0.2);
+    transform: scale(0.7);
+    transition: transform 0.32s cubic-bezier(0.34, 1.56, 0.64, 1);
+    max-width: 88vw;
+    min-width: 250px;
+  }
+  .popup-overlay.active .popup-card { transform: scale(1); }
+
+  .popup-number {
+    font-family: 'Baloo 2', cursive;
+    font-size: clamp(4.5rem, 14vw, 8rem);
+    font-weight: 800;
+    color: var(--gold);
+    line-height: 1;
+    text-shadow: 0 0 40px rgba(245,200,66,0.55);
+    margin-bottom: 6px;
+  }
+
+  .popup-phrase {
+    font-size: clamp(0.85rem, 2.2vw, 1.2rem);
+    color: var(--text);
+    line-height: 1.5;
+    font-style: italic;
+    margin-bottom: 20px;
+    opacity: 0.88;
+  }
+
+  .popup-close {
+    background: transparent;
+    border: 1px solid rgba(245,200,66,0.35);
+    color: var(--text-muted);
+    border-radius: 7px;
+    padding: 7px 22px;
+    font-size: 0.7rem;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .popup-close:hover { background: rgba(245,200,66,0.1); color: var(--gold); border-color: var(--gold); }
+
+  /* ===== TOAST ===== */
+  .toast {
+    position: fixed;
+    bottom: 26px;
+    left: 50%;
+    transform: translateX(-50%) translateY(65px);
+    background: var(--crimson);
+    color: white;
+    padding: 10px 24px;
+    border-radius: 100px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    letter-spacing: 1px;
+    transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    z-index: 200;
+    white-space: nowrap;
+  }
+  .toast.show { transform: translateX(-50%) translateY(0); }
+
+  #confetti-canvas { position: fixed; inset: 0; pointer-events: none; z-index: 50; }
+
+  /* ===== MOBILE: top bar horizontal + grid below ===== */
+  @media (max-width: 640px) {
+    .main-layout {
+      flex-direction: column;
+      height: 100dvh;
+    }
+
+    .left-panel {
+      width: 100%;
+      min-width: unset;
+      height: auto;
+      flex-direction: row;
+      align-items: center;
+      justify-content: space-between;
+      gap: 6px;
+      padding: 7px 10px;
+      border-right: none;
+      border-bottom: 1px solid var(--border);
+      overflow: visible;
+      flex-shrink: 0;
+    }
+
+    .left-panel .divider { display: none; }
+    .current-label { display: none; }
+    .bingo-phrase { display: none; }
+    .history-label { display: none; }
+
+    .number-display {
+      width: 60px;
+      height: 60px;
+      flex-shrink: 0;
+    }
+
+    .big-number { font-size: 2rem; }
+
+    .history-bubbles {
+      flex-direction: row;
+      gap: 4px;
+    }
+
+    #hist1 { width: 26px; height: 26px; font-size: 0.62rem; }
+    #hist2 { width: 30px; height: 30px; font-size: 0.7rem; }
+    #hist3 { width: 35px; height: 35px; font-size: 0.78rem; }
+
+    .count-info { font-size: 0.55rem; white-space: nowrap; }
+
+    .run-btn {
+      width: auto;
+      padding: 7px 14px;
+      font-size: 0.9rem;
+      border-radius: 8px;
+      flex-shrink: 0;
+      letter-spacing: 1px;
+    }
+
+    .reset-btn {
+      width: auto;
+      padding: 6px 9px;
+      font-size: 0.55rem;
+      letter-spacing: 1px;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .right-panel {
+      flex: 1;
+      padding: 5px 5px;
+      min-height: 0;
+    }
+
+    .number-grid { gap: 3px; }
+
+    .num-cell { font-size: clamp(0.6rem, 2.6vw, 0.9rem); }
+  }
+</style>
+</head>
+<body>
+
+<div class="main-layout">
+  <!-- LEFT PANEL -->
+  <div class="left-panel">
+    <div class="current-label">Now Calling</div>
+
+    <div class="number-display">
+      <div class="number-ring"></div>
+      <div class="number-ring-2"></div>
+      <div class="big-number" id="bigNumber">?</div>
+    </div>
+
+    <div class="bingo-phrase" id="bingoPhrase">Press RUN to start</div>
+
+    <button class="run-btn" id="btnRun">▶ RUN</button>
+    <div class="count-info">Called: <span id="calledCount">0</span> / 90</div>
+
+    <div class="divider"></div>
+
+    <div class="history-label">Last Called</div>
+    <div class="history-bubbles">
+      <div class="hb" id="hist1">—</div>
+      <div class="hb" id="hist2">—</div>
+      <div class="hb" id="hist3">—</div>
+    </div>
+
+    <div class="divider"></div>
+
+    <button class="reset-btn" id="btnReset">↺ Reset Game</button>
+  </div>
+
+  <!-- RIGHT PANEL -->
+  <div class="right-panel">
+    <div class="number-grid" id="numberGrid"></div>
+  </div>
+</div>
+
+<!-- POPUP -->
+<div class="popup-overlay" id="popup">
+  <div class="popup-card">
+    <div class="popup-number" id="popupNumber"></div>
+    <div class="popup-phrase" id="popupPhrase"></div>
+    <button class="popup-close" id="popupClose">✕ Close</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+<canvas id="confetti-canvas"></canvas>
+
+<script>
+const bingoNumberWords = [
+  "Top of the house, number 1!","Kaala dhan — number 2!","Goodness me, number 3!","Knock at the door — 4!","Symbol of congress — 5!","Super sixer — 6!","Colours of the rainbow — 7!","Big fat lady, number 8!","Number of planets — 9!","A big fat hen — 10!","1 and 1, eleven!","One dozen — 12!","Unlucky for some, lucky for me — 13!","Valentine's Day — 14!","Yet to be kissed — 15!","Sweet sixteen — 16!","Dancing Queen — 17!","Voting age — 18!","End of the teens — 19!","Blind 20!","A gun salute — 21!","Two little ducks — 22!","You and me — 23!","Two dozen — 24!","Silver Jubilee — 25!","Republic Day — 26!","Gateway to heaven — 27!","Duck and its mate — 28!","In your prime — 29!","It's middle age — 30!","Time for fun — 31!","Mouth full — 32!","All the threes — 33!","Dil maange more — 34!","Flirty husband — 35!","Popular number — 36!","Mixed luck — 37!","Oversize — 38!","Watch your waistline — 39!","Naughty 40!","Life's begun at 41!","Quit India Movement — 42!","Pain in the knee — 43!","All the fours — 44!","Halfway there — 45!","Up to tricks — 46!","Year of Independence — 47!","Four dozen — 48!","Rise and shine — 49!","Half a century — 50!","Charity begins at 51!","Pack of cards — 52!","Pack with a joker — 53!","Pack with two jokers — 54!","All the fives — 55!","Pick up sticks — 56!","Mutiny year — 57!","Time to retire — 58!","Just retired — 59!","Five dozen — 60!","Baker's bun — 61!","Click the two — 62!","Click the three — 63!","Catch the chor — 64!","Old age pension — 65!","Chakke pe chakka — 66!","Made in heaven — 67!","Saving grace — 68!","Ulta Pulta — 69!","Lucky blind — 70!","Lucky bachelor — 71!","Lucky couple — 72!","A crutch and a flea — 73!","Lucky chor — 74!","Diamond Jubilee — 75!","Lucky six — 76!","Two hockey sticks — 77!","Heaven's gate — 78!","Lucky nine — 79!","Gandhi's breakfast — 80!","Corner shot — 81!","Last of the two — 82!","India wins the Cup — 83!","Last of the chors — 84!","Grandma — 85!","Last six — 86!","Grandpa — 87!","Two fat ladies — 88!","All but one — 89!","Top of the house — 90!"
+];
+
+const state = { selected: [], rolling: false };
+
+// Build grid: 9 rows × 10 cols, grid-auto-flow: column
+// Numbers fill column by column: col0=1-9, col1=10-18, ..., col9=82-90
+// Alternate odd columns (1,3,5,7,9) get .alt class
+const grid = document.getElementById('numberGrid');
+for (let i = 1; i <= 90; i++) {
+  const colIdx = Math.floor((i - 1) / 9); // 0-9
+  const cell = document.createElement('div');
+  cell.className = 'num-cell' + (colIdx % 2 === 1 ? ' alt' : '');
+  cell.textContent = i;
+  cell.id = 'cell-' + i;
+  grid.appendChild(cell);
+}
+
+function getNextRandom() {
+  if (state.selected.length >= 90) return null;
+  let n;
+  do { n = Math.floor(Math.random() * 90) + 1; } while (state.selected.includes(n));
+  return n;
+}
+
+function updateHistory() {
+  const s = state.selected;
+  const len = s.length;
+  // hist3 = most recently called (just before current), hist2 = one older, hist1 = oldest of 3
+  document.getElementById('hist1').textContent = len >= 3 ? s[len - 3] : '—';
+  document.getElementById('hist2').textContent = len >= 2 ? s[len - 2] : '—';
+  document.getElementById('hist3').textContent = len >= 1 ? s[len - 1] : '—';
+}
+
+function speakNumber(number, phrase) {
+  if (!window.speechSynthesis) return;
+  speechSynthesis.cancel();
+  const u1 = new SpeechSynthesisUtterance(String(number));
+  u1.lang = 'en-IN'; u1.rate = 0.85; u1.pitch = 1.1; u1.volume = 1;
+  const u2 = new SpeechSynthesisUtterance(phrase);
+  u2.lang = 'en-IN'; u2.rate = 0.9; u2.pitch = 1.0; u2.volume = 1;
+  u1.onend = () => setTimeout(() => speechSynthesis.speak(u2), 200);
+  speechSynthesis.speak(u1);
+}
+
+function showPopup(number, phrase) {
+  document.getElementById('popupNumber').textContent = number;
+  document.getElementById('popupPhrase').textContent = phrase;
+  document.getElementById('popup').classList.add('active');
+}
+
+function hidePopup() {
+  document.getElementById('popup').classList.remove('active');
+}
+
+document.getElementById('popupClose').addEventListener('click', hidePopup);
+document.getElementById('popup').addEventListener('click', e => { if (e.target === e.currentTarget) hidePopup(); });
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3500);
+}
+
+let rollInterval = null;
+
+function callNumber() {
+  if (state.rolling) return;
+  if (state.selected.length >= 90) { showToast('🎉 All 90 numbers called!'); return; }
+
+  const num = getNextRandom();
+  if (!num) return;
+
+  state.rolling = true;
+  document.getElementById('btnRun').disabled = true;
+
+  const bigNum = document.getElementById('bigNumber');
+  bigNum.classList.add('rolling');
+  rollInterval = setInterval(() => { bigNum.textContent = Math.floor(Math.random() * 90) + 1; }, 80);
+
+  setTimeout(() => {
+    clearInterval(rollInterval);
+    bigNum.classList.remove('rolling');
+    bigNum.textContent = num;
+    state.selected.push(num);
+
+    const phrase = bingoNumberWords[num - 1];
+    document.getElementById('bingoPhrase').textContent = phrase;
+    document.getElementById('calledCount').textContent = state.selected.length;
+    updateHistory();
+
+    const cell = document.getElementById('cell-' + num);
+    cell.classList.add('selected', 'just-called');
+    setTimeout(() => cell.classList.remove('just-called'), 650);
+
+    speakNumber(num, phrase);
+    showPopup(num, phrase);
+
+    if (state.selected.length === 90) { launchConfetti(); showToast('🎊 All 90 numbers called!'); }
+
+    state.rolling = false;
+    document.getElementById('btnRun').disabled = false;
+  }, 900);
+}
+
+document.getElementById('btnRun').addEventListener('click', callNumber);
+document.addEventListener('keypress', e => {
+  const popupActive = document.getElementById('popup').classList.contains('active');
+  if (!popupActive) callNumber();
+  else if (e.key === 'Enter' || e.key === ' ') hidePopup();
+});
+
+document.getElementById('btnReset').addEventListener('click', () => {
+  if (!confirm('Reset the game? All progress will be lost.')) return;
+  clearInterval(rollInterval);
+  state.selected = []; state.rolling = false;
+  document.getElementById('bigNumber').textContent = '?';
+  document.getElementById('bingoPhrase').textContent = 'Press RUN to start';
+  document.getElementById('calledCount').textContent = '0';
+  document.getElementById('btnRun').disabled = false;
+  ['hist1','hist2','hist3'].forEach(id => document.getElementById(id).textContent = '—');
+  for (let i = 1; i <= 90; i++) document.getElementById('cell-' + i).classList.remove('selected','just-called');
+  hidePopup();
+  if (window.speechSynthesis) speechSynthesis.cancel();
+});
+
+window.onbeforeunload = e => {
+  if (state.selected.length > 0) { e.returnValue = 'Game in progress. Sure?'; return e.returnValue; }
+};
+
+// Confetti
+const canvas = document.getElementById('confetti-canvas');
+const ctx = canvas.getContext('2d');
+let confettiParticles = [];
+
+function launchConfetti() {
+  canvas.width = window.innerWidth; canvas.height = window.innerHeight;
+  confettiParticles = [];
+  const colors = ['#f5c842','#c0392b','#27ae60','#2980b9','#8e44ad','#fff'];
+  for (let i = 0; i < 180; i++) {
+    confettiParticles.push({
+      x: Math.random() * canvas.width, y: -20,
+      w: 6 + Math.random() * 8, h: 10 + Math.random() * 6,
+      color: colors[Math.floor(Math.random() * colors.length)],
+      vx: (Math.random() - 0.5) * 4, vy: 2 + Math.random() * 4,
+      rot: Math.random() * 360, rotV: (Math.random() - 0.5) * 6
+    });
+  }
+  animateConfetti();
+}
+
+function animateConfetti() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  confettiParticles = confettiParticles.filter(p => p.y < canvas.height + 20);
+  confettiParticles.forEach(p => {
+    p.x += p.vx; p.y += p.vy; p.vy += 0.08; p.rot += p.rotV;
+    ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.rot * Math.PI / 180);
+    ctx.fillStyle = p.color; ctx.fillRect(-p.w/2, -p.h/2, p.w, p.h); ctx.restore();
+  });
+  if (confettiParticles.length > 0) requestAnimationFrame(animateConfetti);
+  else ctx.clearRect(0, 0, canvas.width, canvas.height);
+}
+</script>
+</body>
+</html>
